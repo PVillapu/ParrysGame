@@ -28,13 +28,13 @@ public partial class PlayerCharacterController : CharacterBody2D
 			velocity.Y += gravity * (float)delta;
 
 		// Handle Jump.
-		bool justJumped = Input.IsActionJustPressed("ui_accept") && IsOnFloor();
+		bool justJumped = Input.IsActionJustPressed("player_jump") && IsOnFloor();
 		if (justJumped)
 			velocity.Y = JumpVelocity;
 
 		// Get the input direction and handle the movement/deceleration.
 		// As good practice, you should replace UI actions with custom gameplay actions.
-		Vector2 direction = Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down");
+		Vector2 direction = Input.GetVector("player_moveLeft", "player_moveRight", "ui_up", "ui_down");
 		if (direction != Vector2.Zero)
 		{
 			velocity.X = direction.X * Speed;
