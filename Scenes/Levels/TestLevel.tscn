@@ -13,3 +13,15 @@ position = Vector2(72, 572)
 [node name="StaticBody2D" parent="LevelPlatforming" instance=ExtResource("1_vllh5")]
 position = Vector2(569, 629)
 scale = Vector2(10.5061, 0.238192)
+
+[node name="StaticBody2D2" parent="LevelPlatforming" instance=ExtResource("1_vllh5")]
+position = Vector2(572, 483)
+scale = Vector2(1.93959, 0.238192)
+
+[node name="StaticBody2D3" parent="LevelPlatforming" instance=ExtResource("1_vllh5")]
+position = Vector2(126, 361)
+scale = Vector2(1.93959, 0.238192)
+
+[node name="StaticBody2D4" parent="LevelPlatforming" instance=ExtResource("1_vllh5")]
+position = Vector2(1029, 361)
+scale = Vector2(1.93959, 0.238192)
