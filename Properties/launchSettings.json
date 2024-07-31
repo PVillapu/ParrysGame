@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "ParrysGame": {
+      "commandName": "Project"
+    },
+    "DebugGame": {
+      "commandName": "Executable",
+      "executablePath": "D:\\Programas\\Godot\\Godot_v4.2.2-stable_mono_win64\\Godot_v4.2.2-stable_mono_win64.exe",
+      "commandLineArgs": "--path D:\\GitHub\\ParrysGame\\ --verbose",
+      "nativeDebugging": true
+    }
+  }
+}

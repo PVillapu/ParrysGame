@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://64xk5eo8xjdb"]
+
+[ext_resource type="PackedScene" uid="uid://cuurraa6oxpln" path="res://Scenes/LevelParts/StaticPlatform.tscn" id="1_vllh5"]
+[ext_resource type="PackedScene" uid="uid://g8xr38rftvpw" path="res://Scenes/Characters/PlayerCharacter.tscn" id="2_di4qw"]
+
+[node name="TestLevel" type="Node2D"]
+
+[node name="CharacterBody2D" parent="." instance=ExtResource("2_di4qw")]
+position = Vector2(72, 572)
+
+[node name="LevelPlatforming" type="Node" parent="."]
+
+[node name="StaticBody2D" parent="LevelPlatforming" instance=ExtResource("1_vllh5")]
+position = Vector2(569, 629)
+scale = Vector2(10.5061, 0.238192)
