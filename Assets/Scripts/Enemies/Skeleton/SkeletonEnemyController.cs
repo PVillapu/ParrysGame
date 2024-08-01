@@ -3,17 +3,18 @@ using Godot;
 public partial class SkeletonEnemyController : CharacterBody2D
 {
     [Export]
-    private float Speed = 100.0f;
+    public float Speed = 100.0f;
     [Export]
-    private float MeleeDistance = 100f;
+    public float MeleeDistance = 100f;
     [Export]
-    private float AttackRate = 2.5f;
+    public float AttackRate = 2.5f;
 
-    private AnimationPlayer CharacterAnimationPlayer = null;
-    private Sprite2D CharacterSprite2D = null;
-    private Area2D DetectionArea2D = null;
-    private PlayerCharacterController PlayerCC = null;
-    private AnimationTree CharacterAnimationTree = null;
+    public AnimationPlayer CharacterAnimationPlayer = null;
+    public Sprite2D CharacterSprite2D = null;
+    public Area2D DetectionArea2D = null;
+    public PlayerCharacterController PlayerCC = null;
+
+    private SkeletonStateMachine CharacterSM = null;
 
     private float LastAttackTime = 0f;
 
@@ -27,12 +28,6 @@ public partial class SkeletonEnemyController : CharacterBody2D
         CharacterAnimationPlayer = (AnimationPlayer)GetNode("AnimationPlayer");
         CharacterSprite2D = (Sprite2D)GetNode("Sprite2D");
         DetectionArea2D = (Area2D)GetNode("Area2D");
-        CharacterAnimationTree = (AnimationTree)GetNode("AnimationTree");
-
-        if(CharacterAnimationTree != null)
-        {
-            CharacterAnimationTree.AnimationStarted += OnAnimationStarted;
-        }
 
         if (DetectionArea2D != null)
         {
@@ -40,9 +35,11 @@ public partial class SkeletonEnemyController : CharacterBody2D
         }
     }
 
-    private void OnAnimationStarted(StringName animName)
+    public override void _Ready()
     {
-        GD.Print(animName);
+        // Setup SM
+        CharacterSM = new SkeletonStateMachine(this);
+        CharacterSM.SetupSM();
     }
 
     private void OnShapeEnteredDetectionArea(Rid bodyRid, Node2D body, long bodyShapeIndex, long localShapeIndex)
@@ -52,7 +49,14 @@ public partial class SkeletonEnemyController : CharacterBody2D
 
     public override void _PhysicsProcess(double delta)
     {
-        ManageCharacterBehavior(delta);
+        CharacterSM.EvaluateSM(delta);
+    }
+
+    public override void _ExitTree()
+    {
+        CharacterSM.CleanSM();
+
+        base._ExitTree();
     }
 
     private void ManageCharacterBehavior(double delta)

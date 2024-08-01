@@ -1,6 +1,6 @@
 [gd_scene load_steps=12 format=3 uid="uid://tnyd1v5umvys"]
 
-[ext_resource type="Script" path="res://Assets/Scripts/Enemies/SkeletonEnemyController.cs" id="1_7qbki"]
+[ext_resource type="Script" path="res://Assets/Scripts/Enemies/Skeleton/SkeletonEnemyController.cs" id="1_7qbki"]
 [ext_resource type="Texture2D" uid="uid://crgamv1tvptxb" path="res://Assets/Textures/Enemies/Skeleton/Idle.png" id="1_mje3k"]
 [ext_resource type="Texture2D" uid="uid://cfqr6c4c60nok" path="res://Assets/Textures/Enemies/Skeleton/Attack.png" id="3_7qyvf"]
 [ext_resource type="Texture2D" uid="uid://csac7aa8rjdsa" path="res://Assets/Textures/Enemies/Skeleton/Walk.png" id="4_148gh"]
