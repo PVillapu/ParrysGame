@@ -1,12 +1,10 @@
-[gd_scene load_steps=3 format=3 uid="uid://64xk5eo8xjdb"]
+[gd_scene load_steps=4 format=3 uid="uid://64xk5eo8xjdb"]
 
 [ext_resource type="PackedScene" uid="uid://cuurraa6oxpln" path="res://Scenes/LevelParts/StaticPlatform.tscn" id="1_vllh5"]
 [ext_resource type="PackedScene" uid="uid://g8xr38rftvpw" path="res://Scenes/Characters/PlayerCharacter.tscn" id="2_di4qw"]
+[ext_resource type="PackedScene" uid="uid://tnyd1v5umvys" path="res://Scenes/Characters/Enemies/skeleton_enemy.tscn" id="3_xfb8g"]
 
 [node name="TestLevel" type="Node2D"]
-
-[node name="CharacterBody2D" parent="." instance=ExtResource("2_di4qw")]
-position = Vector2(72, 572)
 
 [node name="LevelPlatforming" type="Node" parent="."]
 
@@ -25,3 +23,11 @@ scale = Vector2(1.93959, 0.238192)
 [node name="StaticBody2D4" parent="LevelPlatforming" instance=ExtResource("1_vllh5")]
 position = Vector2(1029, 361)
 scale = Vector2(1.93959, 0.238192)
+
+[node name="MovableCharacters" type="Node" parent="."]
+
+[node name="Player" parent="MovableCharacters" instance=ExtResource("2_di4qw")]
+position = Vector2(72, 548)
+
+[node name="Skeleton" parent="MovableCharacters" instance=ExtResource("3_xfb8g")]
+position = Vector2(961, 556)

@@ -2,21 +2,23 @@ using Godot;
 
 public partial class PlayerCharacterController : CharacterBody2D
 {
-	private const float Speed = 300.0f;
-	private const float JumpVelocity = -600.0f;
+	[Export]
+	private float Speed = 300.0f;
+	[Export]
+	private float JumpVelocity = -600.0f;
 
 	// Get the gravity from the project settings to be synced with RigidBody nodes.
 	public float gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsSingle();
 
-    private AnimationPlayer AnimationPlayer = null;
-    private Sprite2D Sprite2D = null;
+    private AnimationPlayer CharacterAnimationPlayer = null;
+    private Sprite2D CharacterSprite2D = null;
 
     public override void _EnterTree()
     {
         base._EnterTree();
 
-        AnimationPlayer = (AnimationPlayer)GetNode("AnimationPlayer");
-		Sprite2D = (Sprite2D)GetNode("Sprite2D");
+        CharacterAnimationPlayer = (AnimationPlayer)GetNode("AnimationPlayer");
+		CharacterSprite2D = (Sprite2D)GetNode("Sprite2D");
 	}
 
 	public override void _PhysicsProcess(double delta)
@@ -52,18 +54,18 @@ public partial class PlayerCharacterController : CharacterBody2D
 
 	private void ManageCharacterAnimation(Vector2 direction, bool JustJumped)
 	{
-		if (AnimationPlayer == null || Sprite2D == null) return;
+		if (CharacterAnimationPlayer == null || CharacterSprite2D == null) return;
 
 		// Sprite flip (right / left)
 		if(direction.X != 0)
 		{
-            Sprite2D.FlipH = direction.X < 0;
+            CharacterSprite2D.FlipH = direction.X < 0;
         }
 
 		// Jump
         if (JustJumped)
         {
-            AnimationPlayer.Play("player_jump");
+            CharacterAnimationPlayer.Play("player_jump");
 			return;
         }
 
@@ -72,18 +74,18 @@ public partial class PlayerCharacterController : CharacterBody2D
 		{
 			if(direction.X == 0)
 			{
-				AnimationPlayer.Play("player_idle");
+				CharacterAnimationPlayer.Play("player_idle");
             }
 			else
 			{
-				AnimationPlayer.Play("player_walk");
+				CharacterAnimationPlayer.Play("player_walk");
 			}
 		}
 		else    // Air
 		{
 			if(Velocity.Y > 0)
 			{
-                AnimationPlayer.Play("player_fall");
+                CharacterAnimationPlayer.Play("player_fall");
             }
 		}
 	}

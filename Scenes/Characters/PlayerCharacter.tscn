@@ -3,8 +3,9 @@
 [ext_resource type="Script" path="res://Assets/Scripts/Player/PlayerCharacterController.cs" id="1_iaqvc"]
 [ext_resource type="Texture2D" uid="uid://54m1pvt11rhn" path="res://Assets/Textures/Player/HeroKnight.png" id="2_6aqsv"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ovwvk"]
-size = Vector2(141.629, 203.591)
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_5vu37"]
+radius = 50.8978
+height = 208.017
 
 [sub_resource type="Animation" id="Animation_64jqg"]
 length = 0.001
@@ -112,9 +113,8 @@ vframes = 9
 frame = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-visible = false
-position = Vector2(-6.63884, 28.7683)
-shape = SubResource("RectangleShape2D_ovwvk")
+position = Vector2(0, 28.7683)
+shape = SubResource("CapsuleShape2D_5vu37")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {
