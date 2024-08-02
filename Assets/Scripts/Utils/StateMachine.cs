@@ -42,6 +42,7 @@ namespace utils.StateMachine
             }
 
             Transition.SetOwnerState(this);
+            Transition.SetStateMachine(StateMachine);
             StateTransitions.Add(NewTransition);
         }
 
@@ -117,4 +118,51 @@ namespace utils.StateMachine
 
         public virtual void CleanSM() { }
     }
+
+    #region SM UTILS
+
+    public class SMConditionalTransition : SMTransition
+    {
+        private Godot.Collections.Dictionary StateMachineConditionPairs = new Godot.Collections.Dictionary();
+        private Godot.Collections.Dictionary StateConditionPairs = new Godot.Collections.Dictionary();
+
+        private SMConditionalTransition() { }
+
+        public SMConditionalTransition(Godot.Collections.Dictionary stateMachineConditionPairs, Godot.Collections.Dictionary stateConditionPairs)
+        {
+            StateMachineConditionPairs = stateMachineConditionPairs.Duplicate(true);
+            StateConditionPairs = stateConditionPairs.Duplicate(true);
+        }
+
+        public override bool EvaluateTriggerCondition()
+        {
+            if(StateMachineConditionPairs != null)
+            {
+                foreach (var (key, value) in StateMachineConditionPairs)
+                {
+                    if (StateMachine.GetSMValues().ContainsKey(key))
+                    {
+                        if (!StateMachine.GetSMValues()[key].Obj.Equals(value.Obj)) return false;
+                    }
+                    else return false;
+                }
+            }
+
+            if (StateConditionPairs != null)
+            {
+                foreach (var (key, value) in StateConditionPairs)
+                {
+                    if (OwnerState.GetStateValues().ContainsKey(key))
+                    {
+                        if (!OwnerState.GetStateValues()[key].Obj.Equals(value.Obj)) return false;
+                    }
+                    else return false;
+                }
+            }
+            
+            return true;
+        }
+    }
+
+    #endregion //SM UTILS
 }
