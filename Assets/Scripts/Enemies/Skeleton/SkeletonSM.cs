@@ -1,17 +1,38 @@
-using utils.StateMachine;
 using Godot;
 
-#region STATE MACHINE
-
-public class SkeletonStateMachine : StateMachine
+[GlobalClass]
+public partial class SkeletonSM : StateMachine
 {
-    public SkeletonEnemyController SkeletonController;
+    [Export]
+    public float Speed = 100.0f;
+    [Export]
+    public float MeleeDistance = 100f;
+    [Export]
+    public float AttackRate = 2.5f;
 
-    private SkeletonStateMachine() { }
+    // Get the gravity from the project settings to be synced with RigidBody nodes.
+    public float gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsSingle();
 
-    public SkeletonStateMachine(SkeletonEnemyController skeletonController)
+    public CharacterBody2D CharacterBody = null;
+    public AnimationPlayer CharacterAnimationPlayer = null;
+    public Sprite2D CharacterSprite2D = null;
+    public Area2D DetectionArea2D = null;
+
+    public override void _EnterTree()
     {
-        SkeletonController = skeletonController;
+        base._EnterTree();
+
+        CharacterBody = (CharacterBody2D)GetNode("../");
+        CharacterAnimationPlayer = (AnimationPlayer)GetNode("../AnimationPlayer");
+        CharacterSprite2D = (Sprite2D)GetNode("../Sprite2D");
+        DetectionArea2D = (Area2D)GetNode("../Area2D");
+    }
+
+    public override void _ExitTree()
+    {
+        CleanSM();
+
+        base._ExitTree();
     }
 
     public override void SetupSM()
@@ -54,8 +75,8 @@ public class SkeletonStateMachine : StateMachine
         AttackState.AddNewTransition(new SMConditionalTransition(AuxStateMachine, AuxState), FollowState);
 
         // Bind signals
-        SkeletonController.DetectionArea2D.BodyEntered += OnBodyEnteredDetectionArea;
-        SkeletonController.DetectionArea2D.BodyExited += OnBodyeExitDetectionArea;
+        DetectionArea2D.BodyEntered += OnBodyEnteredDetectionArea;
+        DetectionArea2D.BodyExited += OnBodyeExitDetectionArea;
 
         base.SetupSM();
     }
@@ -85,50 +106,41 @@ public class SkeletonStateMachine : StateMachine
 
     public override void CleanSM()
     {
-        SkeletonController.DetectionArea2D.BodyEntered -= OnBodyEnteredDetectionArea;
-        SkeletonController.DetectionArea2D.BodyExited -= OnBodyeExitDetectionArea;
+        DetectionArea2D.BodyEntered -= OnBodyEnteredDetectionArea;
+        DetectionArea2D.BodyExited -= OnBodyeExitDetectionArea;
 
         base.CleanSM();
     }
 }
 
-#endregion //STATE MACHINE
-
 #region STATES
 
 public class SMSkeletonState : SMState
 {
-    public SkeletonEnemyController SkeletonController = null;
+    public SkeletonSM SkeletonStateMachine = null;
 
     public override void OnEnterState()
     {
-        SkeletonStateMachine SkeletonSM = StateMachine as SkeletonStateMachine;
-        if (SkeletonSM != null)
-        {
-            SkeletonController = SkeletonSM.SkeletonController;
-        }
+        SkeletonStateMachine = StateMachine as SkeletonSM;
     }
 }
 
 public class SkeletonIdleState : SMSkeletonState
 {
-    public override void OnEnterState()
-    {
-        base.OnEnterState();
-    }
-
     public override void EvaluateState(double delta)
     {
-        Vector2 velocity = SkeletonController.Velocity;
+        CharacterBody2D CharacterBody = SkeletonStateMachine.CharacterBody;
+
+        Vector2 velocity = CharacterBody.Velocity;
 
         // Add the gravity if needed
-        if (!SkeletonController.IsOnFloor())
-            velocity.Y += SkeletonController.gravity * (float)delta;
+        if (!CharacterBody.IsOnFloor())
+            velocity.Y += SkeletonStateMachine.gravity * (float)delta;
 
-        SkeletonController.Velocity = velocity;
-        SkeletonController.MoveAndSlide();
+        CharacterBody.Velocity = velocity;
+        CharacterBody.MoveAndSlide();
 
-        SkeletonController.CharacterAnimationPlayer.Play("skeleton_idle");
+        SkeletonStateMachine.CharacterAnimationPlayer.Play("skeleton_idle");
     }
 }
 
@@ -146,32 +158,34 @@ public class SkeletonFollowState : SMSkeletonState
 
     public override void EvaluateState(double delta)
     {
-        Vector2 velocity = SkeletonController.Velocity;
+        CharacterBody2D CharacterBody = SkeletonStateMachine.CharacterBody;
+
+        Vector2 velocity = CharacterBody.Velocity;
 
         // Add the gravity if needed
-        if (!SkeletonController.IsOnFloor())
-            velocity.Y += SkeletonController.gravity * (float)delta;
+        if (!CharacterBody.IsOnFloor())
+            velocity.Y += SkeletonStateMachine.gravity * (float)delta;
 
-        float XDirection = PlayerCC.Position.X - SkeletonController.Position.X;
+        float XDirection = PlayerCC.Position.X - CharacterBody.Position.X;
 
         if (Mathf.Abs(XDirection) > 20f)
         {
             XDirection /= Mathf.Abs(XDirection);
-            velocity.X = XDirection * SkeletonController.Speed;
-            SkeletonController.CharacterSprite2D.FlipH = XDirection < 0f;
+            velocity.X = XDirection * SkeletonStateMachine.Speed;
+            SkeletonStateMachine.CharacterSprite2D.FlipH = XDirection < 0f;
 
-            if (SkeletonController.CharacterAnimationPlayer == null) return;
+            if (SkeletonStateMachine.CharacterAnimationPlayer == null) return;
 
-            SkeletonController.CharacterAnimationPlayer.Play("skeleton_walk");
+            SkeletonStateMachine.CharacterAnimationPlayer.Play("skeleton_walk");
         }
         else
         {
             velocity.X = 0f;
-            SkeletonController.CharacterAnimationPlayer.Play("skeleton_idle");
+            SkeletonStateMachine.CharacterAnimationPlayer.Play("skeleton_idle");
         }
 
-        SkeletonController.Velocity = velocity;
-        SkeletonController.MoveAndSlide();
+        CharacterBody.Velocity = velocity;
+        CharacterBody.MoveAndSlide();
     }
 }
 
@@ -183,25 +197,27 @@ public class SkeletonAttackState : SMSkeletonState
 
         StateMachine.GetSMValues()["IsAttacking"] = true;
 
-        SkeletonController.CharacterAnimationPlayer.AnimationFinished += OnAttackAnimationFinished;
-        SkeletonController.CharacterAnimationPlayer.Play("skeleton_attack");
+        SkeletonStateMachine.CharacterAnimationPlayer.AnimationFinished += OnAttackAnimationFinished;
+        SkeletonStateMachine.CharacterAnimationPlayer.Play("skeleton_attack");
     }
 
     public override void EvaluateState(double delta)
     {
+        CharacterBody2D CharacterBody = SkeletonStateMachine.CharacterBody;
+
         Vector2 velocity = Vector2.Zero;
 
         // Add the gravity if needed
-        if (!SkeletonController.IsOnFloor())
-            velocity.Y += SkeletonController.gravity * (float)delta;
+        if (!CharacterBody.IsOnFloor())
+            velocity.Y += SkeletonStateMachine.gravity * (float)delta;
 
-        SkeletonController.Velocity = velocity;
-        SkeletonController.MoveAndSlide();
+        CharacterBody.Velocity = velocity;
+        CharacterBody.MoveAndSlide();
     }
 
     public override void OnExitState()
     {
-        SkeletonController.CharacterAnimationPlayer.AnimationFinished -= OnAttackAnimationFinished;
+        SkeletonStateMachine.CharacterAnimationPlayer.AnimationFinished -= OnAttackAnimationFinished;
     }
 
     private void OnAttackAnimationFinished(StringName animName)
@@ -218,23 +234,28 @@ public class SkeletonAttackState : SMSkeletonState
 public class PlayerInAttackRangeTransition : SMTransition
 {
     PlayerCharacterController PlayerCC = null;
-    SkeletonEnemyController SkeletonController = null;
+    SkeletonSM SkeletonSM = null;
+    CharacterBody2D SkeletonCharacterBody = null;
 
     public override bool EvaluateTriggerCondition()
     {
         if (PlayerCC == null)
         {
-            if (!OwnerState.StateMachine.GetSMValues().ContainsKey("PlayerCharacterController")) return false;
+            if (!StateMachine.GetSMValues().ContainsKey("PlayerCharacterController")) return false;
 
-            PlayerCC = (PlayerCharacterController)OwnerState.StateMachine.GetSMValues()["PlayerCharacterController"];
+            PlayerCC = (PlayerCharacterController)StateMachine.GetSMValues()["PlayerCharacterController"];
         }
 
-        if(SkeletonController == null)
+        if(SkeletonSM == null)
         {
-            SMSkeletonState SkeletonState = OwnerState as SMSkeletonState;
-            if (SkeletonState == null) return false;
+            SkeletonSM = StateMachine as SkeletonSM;
+        }
 
-            SkeletonController = SkeletonState.SkeletonController;
+        if(SkeletonCharacterBody == null)
+        {
+            if (SkeletonSM == null) return false;
+
+            SkeletonCharacterBody = SkeletonSM.CharacterBody;
         }
 
         float LastAttackTime = 0f;
@@ -243,8 +264,8 @@ public class PlayerInAttackRangeTransition : SMTransition
             LastAttackTime = (ulong)OwnerState.StateMachine.GetSMValues()["LastAttackTime"];
         }
 
-        return Time.GetTicksMsec() >= LastAttackTime + SkeletonController.AttackRate 
-            && PlayerCC.Position.DistanceTo(SkeletonController.Position) < SkeletonController.MeleeDistance;
+        return Time.GetTicksMsec() >= LastAttackTime + SkeletonSM.AttackRate 
+            && PlayerCC.Position.DistanceTo(SkeletonCharacterBody.Position) < SkeletonSM.MeleeDistance;
     }
 }
 
