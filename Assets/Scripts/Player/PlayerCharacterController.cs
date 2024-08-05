@@ -6,12 +6,17 @@ public partial class PlayerCharacterController : CharacterBody2D
 	private float Speed = 300.0f;
 	[Export]
 	private float JumpVelocity = -600.0f;
+	[Export]
+	private float JumpInputBufferDelay = 0.1f;
 
 	// Get the gravity from the project settings to be synced with RigidBody nodes.
 	public float gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsSingle();
 
     private AnimationPlayer CharacterAnimationPlayer = null;
     private Sprite2D CharacterSprite2D = null;
+
+	private ulong LastTimeJumpRequest = 0;
+	private bool WantsToJump = false;
 
     public override void _EnterTree()
     {
@@ -21,7 +26,16 @@ public partial class PlayerCharacterController : CharacterBody2D
 		CharacterSprite2D = (Sprite2D)GetNode("Sprite2D");
 	}
 
-	public override void _PhysicsProcess(double delta)
+    public override void _Process(double delta)
+    {
+		if (Input.IsActionJustPressed("player_jump")) 
+		{
+            LastTimeJumpRequest = Time.GetTicksMsec();
+			WantsToJump = true;
+        }
+    }
+
+    public override void _PhysicsProcess(double delta)
 	{
 		Vector2 velocity = Velocity;
 
@@ -30,9 +44,12 @@ public partial class PlayerCharacterController : CharacterBody2D
 			velocity.Y += gravity * (float)delta;
 
 		// Handle Jump.
-		bool justJumped = Input.IsActionJustPressed("player_jump") && IsOnFloor();
+		bool justJumped = WantsToJump && IsOnFloor() && Time.GetTicksMsec() <= LastTimeJumpRequest + JumpInputBufferDelay * 1000;
 		if (justJumped)
+		{
 			velocity.Y = JumpVelocity;
+			WantsToJump = false;
+		}
 
 		// Get the input direction and handle the movement/deceleration.
 		// As good practice, you should replace UI actions with custom gameplay actions.

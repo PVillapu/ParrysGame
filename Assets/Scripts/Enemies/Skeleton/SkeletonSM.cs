@@ -133,6 +133,8 @@ public class SkeletonIdleState : SMSkeletonState
 
         Vector2 velocity = CharacterBody.Velocity;
 
+        velocity.X = 0f;
+
         // Add the gravity if needed
         if (!CharacterBody.IsOnFloor())
             velocity.Y += SkeletonStateMachine.gravity * (float)delta;
