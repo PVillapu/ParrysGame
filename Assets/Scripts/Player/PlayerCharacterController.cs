@@ -1,16 +1,22 @@
 using Godot;
 
+[GlobalClass]
 public partial class PlayerCharacterController : CharacterBody2D
 {
+	[ExportGroup("Movement")]
+    [Export]
+    private float Speed = 300.0f;
+    [Export]
+    private float JumpVelocity = -600.0f;
+    [Export]
+    private float JumpInputBufferDelay = 0.1f;
 	[Export]
-	private float Speed = 300.0f;
-	[Export]
-	private float JumpVelocity = -600.0f;
-	[Export]
-	private float JumpInputBufferDelay = 0.1f;
+	private float FallingGravityMultiplier = 1.5f;
+    [Export]
+	private float MaxFallVelocity = 50f;
 
-	// Get the gravity from the project settings to be synced with RigidBody nodes.
-	public float gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsSingle();
+    // Get the gravity from the project settings to be synced with RigidBody nodes.
+    public float gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsSingle();
 
     private AnimationPlayer CharacterAnimationPlayer = null;
     private Sprite2D CharacterSprite2D = null;
@@ -39,10 +45,6 @@ public partial class PlayerCharacterController : CharacterBody2D
 	{
 		Vector2 velocity = Velocity;
 
-		// Add the gravity.
-		if (!IsOnFloor())
-			velocity.Y += gravity * (float)delta;
-
 		// Handle Jump.
 		bool justJumped = WantsToJump && IsOnFloor() && Time.GetTicksMsec() <= LastTimeJumpRequest + JumpInputBufferDelay * 1000;
 		if (justJumped)
@@ -62,6 +64,21 @@ public partial class PlayerCharacterController : CharacterBody2D
 		{
 			velocity.X = Mathf.MoveToward(Velocity.X, 0, Speed);
 		}
+
+        // Add the gravity.
+        if (!IsOnFloor())
+		{
+            // Clamp falling velocity
+            if (velocity.Y > 0)
+            {
+                velocity.Y += gravity * FallingGravityMultiplier * (float)delta;
+                velocity.Y = Mathf.Clamp(velocity.Y, 0f, MaxFallVelocity);
+            }
+            else
+            {
+                velocity.Y += gravity * (float)delta;
+            }
+        }
 
 		Velocity = velocity;
 		MoveAndSlide();

@@ -103,6 +103,7 @@ _data = {
 position = Vector2(0, -60)
 scale = Vector2(0.451886, 0.451886)
 script = ExtResource("1_iaqvc")
+MaxFallVelocity = 1000.0
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture_filter = 1
