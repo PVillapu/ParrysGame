@@ -25,7 +25,7 @@ public partial class SkeletonSM : StateMachine
         CharacterBody = (CharacterBody2D)GetNode("../");
         CharacterAnimationPlayer = (AnimationPlayer)GetNode("../AnimationPlayer");
         CharacterSprite2D = (Sprite2D)GetNode("../Sprite2D");
-        DetectionArea2D = (Area2D)GetNode("../Area2D");
+        DetectionArea2D = (Area2D)GetNode("../DetectionArea");
     }
 
     public override void _ExitTree()

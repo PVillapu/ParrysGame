@@ -1,7 +1,8 @@
-[gd_scene load_steps=10 format=3 uid="uid://g8xr38rftvpw"]
+[gd_scene load_steps=11 format=3 uid="uid://g8xr38rftvpw"]
 
 [ext_resource type="Script" path="res://Assets/Scripts/Player/PlayerCharacterController.cs" id="1_iaqvc"]
 [ext_resource type="Texture2D" uid="uid://54m1pvt11rhn" path="res://Assets/Textures/Player/HeroKnight.png" id="2_6aqsv"]
+[ext_resource type="Script" path="res://Assets/Scripts/Utils/HealthComponent.cs" id="3_iv4qo"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_5vu37"]
 radius = 50.8978
@@ -103,7 +104,9 @@ _data = {
 position = Vector2(0, -60)
 scale = Vector2(0.451886, 0.451886)
 script = ExtResource("1_iaqvc")
+Speed = 350.0
 MaxFallVelocity = 1000.0
+JumpAirborneFallMultiplier = 2.5
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture_filter = 1
@@ -122,3 +125,14 @@ libraries = {
 "": SubResource("AnimationLibrary_onlep")
 }
 autoplay = "player_idle"
+
+[node name="HealthComponent" type="Area2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("3_iv4qo")
+MaxHealth = 16
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HealthComponent"]
+position = Vector2(0, 28.7683)
+shape = SubResource("CapsuleShape2D_5vu37")
+debug_color = Color(0.34902, 0.607843, 0.337255, 0.156863)

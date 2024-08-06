@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://cuurraa6oxpln" path="res://Scenes/LevelParts/StaticPlatform.tscn" id="1_vllh5"]
 [ext_resource type="PackedScene" uid="uid://g8xr38rftvpw" path="res://Scenes/Characters/PlayerCharacter.tscn" id="2_di4qw"]
-[ext_resource type="PackedScene" uid="uid://tnyd1v5umvys" path="res://Scenes/Characters/Enemies/skeleton_enemy.tscn" id="3_xfb8g"]
+[ext_resource type="PackedScene" uid="uid://tnyd1v5umvys" path="res://Scenes/Characters/Enemies/skeleton_enemy.tscn" id="3_ii5lo"]
 
 [node name="TestLevel" type="Node2D"]
 
@@ -29,5 +29,5 @@ scale = Vector2(1.93959, 0.238192)
 [node name="Player" parent="MovableCharacters" instance=ExtResource("2_di4qw")]
 position = Vector2(72, 548)
 
-[node name="Skeleton" parent="MovableCharacters" instance=ExtResource("3_xfb8g")]
-position = Vector2(961, 556)
+[node name="CharacterBody2D" parent="." instance=ExtResource("3_ii5lo")]
+position = Vector2(1023, 559)

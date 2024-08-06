@@ -15,14 +15,24 @@ public partial class PlayerCharacterController : CharacterBody2D
     [Export]
 	private float MaxFallVelocity = 50f;
 
+	[ExportGroup("Jump")]
+	[Export]
+	private float JumpAirborneFallMultiplier = 1.5f;
+
     // Get the gravity from the project settings to be synced with RigidBody nodes.
     public float gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsSingle();
 
     private AnimationPlayer CharacterAnimationPlayer = null;
     private Sprite2D CharacterSprite2D = null;
+	private HealthComponent PlayerHealthComponent = null;
 
+	// Jump
 	private ulong LastTimeJumpRequest = 0;
 	private bool WantsToJump = false;
+
+	private bool PerformingJump = false;
+	private bool HoldingJumpInput = false;
+	private bool HasJumpYControl = false;
 
     public override void _EnterTree()
     {
@@ -30,32 +40,65 @@ public partial class PlayerCharacterController : CharacterBody2D
 
         CharacterAnimationPlayer = (AnimationPlayer)GetNode("AnimationPlayer");
 		CharacterSprite2D = (Sprite2D)GetNode("Sprite2D");
+		PlayerHealthComponent = (HealthComponent)GetNode("HealthComponent");
+
+		if(PlayerHealthComponent != null )
+		{
+            PlayerHealthComponent.OnDamageTaken += OnPlayerDamageTaken;
+            PlayerHealthComponent.OnDied += OnPlayerDied;
+		}
 	}
+
+    private void OnPlayerDamageTaken(int damageAmmount)
+    {
+		GD.Print("Player received " + damageAmmount + " damage! Current player health: " + PlayerHealthComponent.GetCurrentHealth());
+    }
+
+    private void OnPlayerDied()
+    {
+		GD.Print("Player died!");
+    }
 
     public override void _Process(double delta)
     {
+		// Check player jump action pressed
 		if (Input.IsActionJustPressed("player_jump")) 
 		{
             LastTimeJumpRequest = Time.GetTicksMsec();
 			WantsToJump = true;
+			HoldingJumpInput = true;
+        }
+
+        // Check player jump action released
+        if (Input.IsActionJustReleased("player_jump"))
+		{
+            HoldingJumpInput = false;
         }
     }
 
     public override void _PhysicsProcess(double delta)
 	{
 		Vector2 velocity = Velocity;
+		bool IsGrounded = IsOnFloor();
 
-		// Handle Jump.
-		bool justJumped = WantsToJump && IsOnFloor() && Time.GetTicksMsec() <= LastTimeJumpRequest + JumpInputBufferDelay * 1000;
+		PerformingJump = !IsGrounded;
+
+        // Handle Jump
+        bool justJumped = WantsToJump && IsGrounded && Time.GetTicksMsec() <= LastTimeJumpRequest + JumpInputBufferDelay * 1000;
 		if (justJumped)
 		{
 			velocity.Y = JumpVelocity;
 			WantsToJump = false;
-		}
+			PerformingJump = true;
+			HasJumpYControl = true;
+        }
 
-		// Get the input direction and handle the movement/deceleration.
-		// As good practice, you should replace UI actions with custom gameplay actions.
-		Vector2 direction = Input.GetVector("player_moveLeft", "player_moveRight", "ui_up", "ui_down");
+        // See if player is still controlling the airborne Y movement
+        HasJumpYControl = PerformingJump && HoldingJumpInput && HasJumpYControl;
+
+        // Get the input direction and handle the movement/deceleration.
+        // As good practice, you should replace UI actions with custom gameplay actions.
+        Vector2 direction = Input.GetVector("player_moveLeft", "player_moveRight", "ui_up", "ui_down");
 		if (direction != Vector2.Zero)
 		{
 			velocity.X = direction.X * Speed;
@@ -66,7 +109,7 @@ public partial class PlayerCharacterController : CharacterBody2D
 		}
 
         // Add the gravity.
-        if (!IsOnFloor())
+        if (!IsGrounded)
 		{
             // Clamp falling velocity
             if (velocity.Y > 0)
@@ -76,7 +119,14 @@ public partial class PlayerCharacterController : CharacterBody2D
             }
             else
             {
-                velocity.Y += gravity * (float)delta;
+				if(PerformingJump && !HasJumpYControl)
+				{
+					velocity.Y += gravity * JumpAirborneFallMultiplier * (float)delta;
+                }
+				else
+				{
+					velocity.Y += gravity * (float)delta;
+				}
             }
         }
 
@@ -122,5 +172,10 @@ public partial class PlayerCharacterController : CharacterBody2D
                 CharacterAnimationPlayer.Play("player_fall");
             }
 		}
+	}
+
+	public HealthComponent GetHealthComponent()
+	{
+		return PlayerHealthComponent;
 	}
 }
