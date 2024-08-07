@@ -19,11 +19,19 @@ public partial class PlayerCharacterController : CharacterBody2D
 	[Export]
 	private float JumpAirborneFallMultiplier = 1.5f;
 
+	[ExportGroup("Attack")]
+	[Export]
+	private int AttackDamage = 1;
+	[Export]
+	private float AttackRate = 0.6f;
+	[Export]
+	private Area2D AttackArea = null;
+
     // Get the gravity from the project settings to be synced with RigidBody nodes.
     public float gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsSingle();
 
-    private AnimationPlayer CharacterAnimationPlayer = null;
-    private Sprite2D CharacterSprite2D = null;
+    private AnimationPlayer PlayerAnimationPlayer = null;
+    private Sprite2D PlayerSprite2D = null;
 	private HealthComponent PlayerHealthComponent = null;
 
 	// Jump
@@ -34,12 +42,15 @@ public partial class PlayerCharacterController : CharacterBody2D
 	private bool HoldingJumpInput = false;
 	private bool HasJumpYControl = false;
 
+	private ulong LastAttackTime = 0;
+	private bool IsAttacking = false;
+
     public override void _EnterTree()
     {
         base._EnterTree();
 
-        CharacterAnimationPlayer = (AnimationPlayer)GetNode("AnimationPlayer");
-		CharacterSprite2D = (Sprite2D)GetNode("Sprite2D");
+        PlayerAnimationPlayer = (AnimationPlayer)GetNode("AnimationPlayer");
+		PlayerSprite2D = (Sprite2D)GetNode("Sprite2D");
 		PlayerHealthComponent = (HealthComponent)GetNode("HealthComponent");
 
 		if(PlayerHealthComponent != null )
@@ -47,17 +58,17 @@ public partial class PlayerCharacterController : CharacterBody2D
             PlayerHealthComponent.OnDamageTaken += OnPlayerDamageTaken;
             PlayerHealthComponent.OnDied += OnPlayerDied;
 		}
+
+		if(PlayerAnimationPlayer != null)
+		{
+            PlayerAnimationPlayer.AnimationFinished += OnPlayerAnimationFinished;
+		}
+
+		if(AttackArea != null)
+		{
+            AttackArea.AreaEntered += OnHitEnemy;
+		}
 	}
-
-    private void OnPlayerDamageTaken(int damageAmmount)
-    {
-		GD.Print("Player received " + damageAmmount + " damage! Current player health: " + PlayerHealthComponent.GetCurrentHealth());
-    }
-
-    private void OnPlayerDied()
-    {
-		GD.Print("Player died!");
-    }
 
     public override void _Process(double delta)
     {
@@ -73,6 +84,18 @@ public partial class PlayerCharacterController : CharacterBody2D
         if (Input.IsActionJustReleased("player_jump"))
 		{
             HoldingJumpInput = false;
+        }
+
+		// Check player attack action
+		if (Input.IsActionJustPressed("player_attack") && !IsAttacking && LastAttackTime + AttackRate * 1000 <= Time.GetTicksMsec())
+		{
+			IsAttacking = true;
+			LastAttackTime = Time.GetTicksMsec();
+			PlayerAnimationPlayer.Play("player_attack");
+
+            // Position the attack area in the facing direction of the player
+            if (AttackArea != null)
+                AttackArea.Scale = new Vector2(PlayerSprite2D.FlipH ? -1f : 1f, 1f);
         }
     }
 
@@ -133,23 +156,23 @@ public partial class PlayerCharacterController : CharacterBody2D
 		Velocity = velocity;
 		MoveAndSlide();
 
-		ManageCharacterAnimation(direction, justJumped);
+		ManageMovementCharacterAnimation(direction, justJumped);
 	}
 
-	private void ManageCharacterAnimation(Vector2 direction, bool JustJumped)
+	private void ManageMovementCharacterAnimation(Vector2 direction, bool JustJumped)
 	{
-		if (CharacterAnimationPlayer == null || CharacterSprite2D == null) return;
+		if (PlayerAnimationPlayer == null || PlayerSprite2D == null || IsAttacking) return;
 
 		// Sprite flip (right / left)
 		if(direction.X != 0)
 		{
-            CharacterSprite2D.FlipH = direction.X < 0;
+            PlayerSprite2D.FlipH = direction.X < 0;
         }
 
 		// Jump
         if (JustJumped)
         {
-            CharacterAnimationPlayer.Play("player_jump");
+            PlayerAnimationPlayer.Play("player_jump");
 			return;
         }
 
@@ -158,24 +181,42 @@ public partial class PlayerCharacterController : CharacterBody2D
 		{
 			if(direction.X == 0)
 			{
-				CharacterAnimationPlayer.Play("player_idle");
+				PlayerAnimationPlayer.Play("player_idle");
             }
 			else
 			{
-				CharacterAnimationPlayer.Play("player_walk");
+				PlayerAnimationPlayer.Play("player_walk");
 			}
 		}
 		else    // Air
 		{
 			if(Velocity.Y > 0)
 			{
-                CharacterAnimationPlayer.Play("player_fall");
+                PlayerAnimationPlayer.Play("player_fall");
             }
 		}
 	}
 
-	public HealthComponent GetHealthComponent()
-	{
-		return PlayerHealthComponent;
-	}
+    private void OnPlayerAnimationFinished(StringName animName)
+    {
+        IsAttacking = false;
+    }
+
+    private void OnPlayerDamageTaken(int damageAmmount)
+    {
+        GD.Print("Player received " + damageAmmount + " damage! Current player health: " + PlayerHealthComponent.GetCurrentHealth());
+    }
+
+    private void OnPlayerDied()
+    {
+        GD.Print("Player died!");
+    }
+
+    private void OnHitEnemy(Area2D area)
+    {
+		HealthComponent EnemyHC = area as HealthComponent;
+		if (EnemyHC == null) return;
+
+		EnemyHC.TakeDamage(AttackDamage);
+    }
 }
